@@ -1,0 +1,40 @@
+env:
+  RCLONECONFIG_DRIVE: "ENCRYPTED[!6152458a87355398e40e5d6562ed5bbe20ad703e33d3e0e2ccad11e009d5db4a297610dbef2358682ec937b983bbf0f3!]"
+  TG_TOKEN: "ENCRYPTED[!dcb8b4d6fdf091ebfea2673159854a8de27933ea857da5b9f240d27a81f9a0f33f85d3f95e9113127ff56ab14082b0e1!]"
+  TG_CHAT_ID: "ENCRYPTED[!d15ef0c4a6fc6e70eaea6cd9275503e89da7781bdcf6819e777bdd871ea76238100d11f90b4c5660b695f101c8a24da1!]"
+  WORKDIR: "/tmp"
+  EMAIL: "ENCRYPTED[!266583472f40c3239578c3d0a193ed2bc5578cdc91837d89b5289b8671d273525c407f480420553865005976ab47cb7d!]"
+  CIRRUS_CLONE_DEPTH: "1"
+  credentials: "ENCRYPTED[!41ea26b6d46ace395c3bc825472bafe065de7cba199e962e219cf139bfbc107fe97915a98f4a6f060836e31a3403bfe0!]"
+
+task:
+  name: "Sync, Build and Upload"
+  only_if: $CIRRUS_REPO_OWNER == 'monuforserver'
+  timeout_in: 120m
+  container:
+    image: anggit86/ubuntu:22.04
+    cpu: 8
+    memory: 32G
+
+  Load-Ccache_background_script:
+     - ./load_ccache.sh
+
+  Sync-rom_script:
+     - git config --global user.name "Monu"
+     - git config --global user.email "$EMAIL"
+     - echo "$credentials" > ~/.git-credentials
+     - git config --global credential.helper store --file=~/.git-credentials
+     - ./sync.sh
+     
+  Build-rom_script:
+     - ./building.sh
+     
+  Ccache-info_script:
+     - set -e
+     - export CCACHE_DIR=$WORKDIR/ccache
+     - ccache -s
+
+  Upload-build_script:
+     - ./ziping.sh
+
+#end
